@@ -1,32 +1,32 @@
-# Solidity Patterns
+# Solidityでのデザインパターン実装
 
-This repository contains a collection of design and programming patterns for the smart contract programming language Solidity in version 0.4.20. Note that newer versions might have changed some of the functionalities.
-Each pattern consists of a code sample and a detailed explanation, including background, implications and additional information about the patterns.
+このレポジトリにはスマートコントラクト言語 solidity 0.4.20 のデザインパターン実装を含みます。
+新しいバージョンではいくつかの機能が変更している可能性があることに注意してください。
+それぞれのパターンはコードサンプルと詳しい説明、その背景、それ以外の追加の情報などで構成されます。
 
-Have a look at the documentation site: https://fravoll.github.io/solidity-patterns/
+ドキュメントはこちら: https://fravoll.github.io/solidity-patterns/
 
-## Contents
+## デザインパターン
 
-* **Behavioral Patterns**
-  * [**Guard Check**](docs/guard_check.md): Ensure that the behavior of a smart contract and its input parameters are as expected.
-  * [**State Machine**](docs/state_machine.md): Enable a contract to go through different stages with different corresponding functionality exposed.
-  * [**Oracle**](docs/oracle.md): Gain access to data stored outside of the blockchain.
-  * [**Randomness**](docs/randomness.md): Generate a random number of a predefined interval in the deterministic environment of a blockchain.
-* **Security Patterns**
-  * [**Access Restriction**](docs/access_restriction.md): Restrict the access to contract functionality according to suitable criteria.
-  * [**Checks Effects Interactions**](docs/checks_effects_interactions.md): Reduce the attack surface for malicious contracts trying to hijack control flow after an external call.
-  * [**Secure Ether Transfer**](docs/secure_ether_transfer.md): Secure transfer of ether from a contract to another address.
-  * [**Pull over Push**](docs/pull_over_push.md): Shift the risk associated with transferring ether to the user.
-  * [**Emergency Stop**](docs/emergency_stop.md): Add an option to disable critical contract functionality in case of an emergency.
-* **Upgradeability Patterns**
-  * [**Proxy Delegate**](docs/proxy_delegate.md): Introduce the possibility to upgrade smart contracts without breaking any dependencies.
-  * [**Eternal Storage**](docs/eternal_storage.md): Keep contract storage after a smart contract upgrade.
-* **Economic Patterns**
-  * [**String Equality Comparison**](docs/string_equality_comparison.md): Check for the equality of two provided strings in a way that minimizes average gas consumption for a large number of different inputs.
-  * [**Tight Variable Packing**](docs/tight_variable_packing.md): Optimize gas consumption when storing or loading statically-sized variables.
-  * [**Memory Array Building**](docs/memory_array_building.md): Aggregate and retrieve data from contract storage in a gas efficient way.
+* **振る舞いに関するパターン**
+  * [**Guard Check**](docs/guard_check.md): スマートコントラクトの振る舞いと入力パラメータを保証する。
+  * [**State Machine**](docs/state_machine.md): 状態の変化に応じてコントラクトの振る舞いを変える。
+  * [**Oracle**](docs/oracle.md): ブロックチェーン外のデータにアクセスする。
+  * [**Randomness**](docs/randomness.md): ブロックチェーンの決定論的環境で定義された間隔の乱数を生成する。
+* **セキュリティに関するパターン**
+  * [**Access Restriction**](docs/access_restriction.md): 適切な基準に従ってコントラクトの機能へのアクセスを制限する。
+  * [**Checks Effects Interactions**](docs/checks_effects_interactions.md): 外部コール後のハイジャックを狙う悪意あるコントラクトの攻撃領域を狭める。
+  * [**Secure Ether Transfer**](docs/secure_ether_transfer.md): コントラクトから他アドレスへの安全なイーサリアムの送金
+  * [**Pull over Push**](docs/pull_over_push.md): ユーザーへのイーサリアムの転送に関連するリスクを軽減する。
+* **アップグレーダビリティに関するパターン**
+  * [**Proxy Delegate**](docs/proxy_delegate.md): 依存関係を壊さずにスマートコントラクトをアップグレードする。
+  * [**Eternal Storage**](docs/eternal_storage.md): スマートコントラクトのアップグレード後においてもコントラクトストレージを保持する。
+* **経済性に関するパターン**
+  * [**String Equality Comparison**](docs/string_equality_comparison.md): 多数の異なる入力に対して平均ガス消費量が最小になるように、2つの文字列が等しいことを確認する。
+  * [**Tight Variable Packing**](docs/tight_variable_packing.md): 静的なサイズの変数を格納またはロードするときにガス消費量を最適化する。
+  * [**Memory Array Building**](docs/memory_array_building.md): コントラクトのストレージ変数からデータを集約し、ガス効率の良い方法で取得する。
   
 
-## Disclaimer
+## 免責事項
 
-All patterns in this document are still in development and should only be used under own responsibility. There is no liability for any damages caused by the use of one of these patterns.
+ここで紹介されているすべてのパターンは開発途中です。そのため、自己責任にて利用してください。このデザインパターンにより何らかの被害を被ったとしてもこちらでは対応いたしかねます。
