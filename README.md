@@ -11,7 +11,7 @@
 * **振る舞いに関するパターン**
   * [**Guard Check**](docs/ja/guard_check.md): スマートコントラクトの振る舞いと入力パラメータを保証する。
   * [**State Machine**](docs/ja/state_machine.md): 状態の変化に応じてコントラクトの振る舞いを変える。
-  * [**Oracle**](docs/oracle.md): ブロックチェーン外のデータにアクセスする。
+  * [**Oracle**](docs/ja/oracle.md): ブロックチェーン外のデータにアクセスする。
   * [**Randomness**](docs/ja/randomness.md): ブロックチェーンの決定論的環境で定義された間隔の乱数を生成する。
 * **セキュリティに関するパターン**
   * [**Access Restriction**](docs/ja/access_restriction.md): 適切な基準に従ってコントラクトの機能へのアクセスを制限する。
