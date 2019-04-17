@@ -1,54 +1,39 @@
 # Guard Check
 
-## 目的
+## Intent
 
-スマートコントラクトの振る舞いと入力パラメータを保証する。
+Ensure that the behavior of a smart contract and its input parameters are as expected.
 
+## Motivation
 
-## 動機
+Like in a regular legal contract, it is often the case in smart contracts, that contract logic is only supposed to come into effect after certain requirements are met. For example a heritage should only be paid out to the heirs after the testator is deceased. While we have lawyers and notaries in the real world, on the blockchain, without regulators or mediators, we require some sort of guards or checks in order to assure that smart contract logic is functioning as specified.
 
-通常の法的契約と同様に、スマートコントラクトでもよくあることですが、契約ロジックは特定の要件が満たされた後に初めて有効になると想定されています。例えば、遺産は遺言者が死亡した後に相続人に支払われるべきです。
-実社会には弁護士や公証人がいますが、スマートコントラクトには規制当局や調停人はいません。そこで、スマートコントラクトロジックが指定した通りに機能していることを確認するために、ある種の警備員や小切手のようなものが必要です。
+The desired behavior of a smart contract would be to check for all required circumstances and only proceed if everything is as intended. In case of any shortcomings, the contract is expected to revert all changes that have been made to its state. To achieve this, Solidity is making use of the way the EVM handles errors: to retain atomicity all changes are reverted and the whole transaction is without effect. Solidity is using exceptions to trigger these errors and revert the state. There are several ways provided by Solidity to trigger such exceptions. This pattern describes their differences and gives an idea on how and when to use each of them.
 
-スマートコントラクトに望まれる振る舞いは、要求されたすべてのことをチェックし、それらが意図したものであるならば実行するということでしょう。また、なんらかのバグや欠陥がある場合、契約はその状態に行われたすべての変更を元に戻すことが望まれます。
-これを行うために、SolidityはEVMがエラーを処理する方法を利用しています。EVMはアトミック性を維持するために、すべての変更は元に戻され、トランザクション全体は無効になります。
-Solidityはこれらのエラーを引き起こして状態を元に戻すために例外を使用しています。そして、そのような例外を引き起こすためにSolidityにはいくつかの方法があります。このパターンはそれらの違いを記述し、それらのそれぞれをどのようにそしていつ使うべきかについて考えていきます。
+## Applicability
+Use the Guard Check pattern when
+* you want to validate user inputs.
+* you want to check the contract state before executing logic.
+* you want to check invariants in your code.
+* you want to rule out conditions that should not be possible.
 
+## Participants & Collaborations
 
-## 適用範囲
+While the pattern can be used to validate data submitted by users as well as data returned from other contracts, the only participant is the implementing contract itself, as all behavior is performed internally.
 
-Guard Checkパターンを使用できるのは、
-* ユーザーが入力したパラメーターを検証したいとき
-* コントラクトロジックを実行する前にコントラクトの状態をチェックしたいとき
-* コード内の不変条件をチェックしたいとき
-* 使用可能にすべきでない条件式を除外したいとき
-です。
+## Implementation
+Prior to Solidity version 0.4.10 checks were commonly implemented with an if-clause that would throw an exception in case the requirement is not met: `if(testator != deceased) { throw; }`. Since version 0.4.13 however, the keyword `throw` is deprecated and the use of one of this three other functions is recommended: `revert()`, `require()` and `assert()`. How and when to use which of them to trigger exceptions will be discussed in this section.
 
+Before the Byzantium update, `require()` and `assert()` behaved identically. Since then the underlying opcodes actually differ. The two methods `require()` and `revert()` use `0xfd` (`REVERT`) while `assert()` uses `0xfe` (`INVALID`). The big difference between the two opcodes is gas return. While `REVERT` is refunding all of the gas that has not been consumed at the time the exception is thrown, `INVALID` uses up all gas included in the transaction. This difference should be kept in mind and already gives an indication for which situations they are intended for.
 
-## 参加者とコラボレーション
+The [Solidity documentation](http://solidity.readthedocs.io/en/v0.4.21/#) suggests that `require()` "should be used to ensure valid conditions, such as inputs, or contract state variables [..], or to validate return values from calls to external contracts" and `assert()` "should only be used to test for internal errors, and to check invariants". Both methods evaluate the parameters passed to it as a boolean and throw an exception if it evaluates to `false`. The `revert()` throws in every case. It is therefore useful in complex situations, like if-else trees, where the evaluation of the condition can not be conducted in one line of code and the use of 'require()' would not be fitting.
 
-このパターンを使用してユーザーが送信したデータや他の契約から返されたデータを検証できますが、すべての動作は内部的に実行されるため、唯一の参加者は実装契約そのものです。
+Generally 'require()' should be used towards the beginning of a function for validation and should be used more often than the other two.  The 'assert()' method will be used at the end of a function and should only prevent severe errors. Under normal circumstances and bug free code the 'assert()' statement should never evaluate to 'true'.
 
+Since [Solidity version 0.4.22](https://solidity.readthedocs.io/en/v0.4.22/units-and-global-variables.html#error-handling) it is possible to append an error message to `require(bool condition, string message)` and `revert(string message)`.
 
-## 実装
-
-Solidityバージョン0.4.10より前では、要件が満たされない場合に例外を投げるif文を使ってチェックが一般的に実装されていました：
-`if(testator != deceased) { throw; }` 。しかし、0.4.13以降では `throw` は廃止となり、代わりに次の3つの関数の使用が推奨されています： `revert()`, `require()` and `assert()` 。このセクションでは、それらのうちどれを使用していつ例外をトリガーするかを説明します。
-
-ビサンチウムのアップデート以前は`require（）`と `assert（）`は同じ振る舞いをしていました。ですがビサンチウム以来、この2つの関数のオペコードは違うものになりました。 2つのメソッド `require（）`と `revert（）`は `0xfd`（` REVERT`）を使い、 `assert（）`は `0xfe`（` INVALID`）を使います。 2つのオペコードの大きな違いはガスリターンにあります。 「REVERT」は例外がスローされた時点で消費されていないすべてのガスを返金していますが、「INVALID」はトランザクションに含まれるすべてのガスを使い果たします。この違いは念頭に置いておくべきであり、すでにどのような状況が意図されているのかを示しています。
-
-[Solidityドキュメント](http://solidity.readthedocs.io/en/v0.4.21/#)では、入力値やコントラクトの状態変数、妥当な条件式であることを保証するため、あるいは外部規約への呼び出しからの戻り値を検証するために`require()`を使用するべきだと述べています。また、内部エラーをテストする際と、定数をチェックするために`assert()`を使用するべきだと述べています。両方のメソッドとも、渡されたパラメータをブール値として評価し、評価結果が `false`の場合は例外をスローします。どんな場合でも `revert（）`は投げます。そのため、if-elseツリーのように、1行のコードで条件の評価を実行できず、 `require()`の使用が適していないような複雑な状況で役立ちます。
-
-一般的に、`require()`はバリデーションのために関数の始めに向かって使われるべきで、他の二つよりももっと頻繁に使われるべきです。
-`assert()`メソッドは関数の最後に使用され、重大なエラーを防ぐためだけに使用されるべきです。
-通常の状況下やバグフリーなコードにおいて、`assert()`文は決して`true`と評価されるべきではありません。
-
-[Solidityバージョン0.4.22](https://solidity.readthedocs.io/en/v0.4.22/units-and-global-variables.html#error-handling)以降、 `require(bool condition, string message)`と`revert(string message)`にエラーメッセージを加えることが可能になりました。
-
-
-## サンプルコード
-
-この架空のサンプルコントラクトは寄付の分配者(= distributor)です。ユーザーは彼らがサポートしたい慈善団体のアドレスと寄付をイーサリアムで送ります。慈善団体のアドレスにイーサリアムがない場合は、全額が送金されます。彼らがすでにいくらかのイーサリアムを所有しているが寄付者よりも少ない場合、寄付額の半分は他の半分が将来の分配のためのコントラクトに留まる一方で転送されます（簡潔さのために実装されていません）。慈善団体が寄付者より多くの資金を持っている場合は、寄付するべきではありません。このサンプルコントラクトは、Check Guardパターンを実装するための3つの可能性すべてを示しています。
+## Sample Code
+This fictional sample contract is a donation distributor. Users send the address of a charity they want to support and a donation int the form of ether. In case the charity has no ether on their address, the whole amount is forwarded. If they do already own some ether but less than the donor, half the amount of the donation is transferred while the other half stays at the contract for future distribution (this functionality is not implemented for the sake of brevity). In case the charity has more funds than the donor, no money should be donated. This sample contract showcases all three possibilities to implement the Check Guard pattern. 
 ```Solidity
 // This code has not been professionally audited, therefore I cannot make any promises about
 // safety or correctness. Use at own risk.
@@ -73,25 +58,21 @@ contract GuardCheck {
     }
 }
 ```
-4行目の `require`文で、ユーザーが慈善団体を指定するのを忘れた場合のように、ユーザーによって提供されたアドレスがゼロではないことを確認します。 5行目で、ユーザーが自分の取引に寄付をしたかどうかを確認します。そうでない場合は、すぐに停止できます。 9行目から始まるif-else文は、チャリティーの現在の残高に応じて、チャリティーに送る金額を決定します。慈善団体が寄付者よりも多くのイーサリアムを持っている場合、14行目の「元に戻す」は、お金が移転されないことを確実にし、機能は元に戻されます。 17行目で、寄付は慈善団体に送られます。 18行目の最後の`assert`文は、寄付後の現在の残高が、寄付前の残高から寄付額を引いたものに等しいことを保証します。通常の状況下では、これは常に `true`と評価されるべきです。これが事実に当てはまらない場合、慈善団体への寄付の送金を含む取引全体が元に戻されます。
 
+In line 4 the `require` statement makes sure that the address provided by the user is not zero as would be the case if the user would have forgotten to specify a charity. Line 5 then checks if the user attached a donation to his transaction. If this is not the case we can stop right there. The if/else construct starting in line 9 determines the amount to be sent to the charity, depending on the charities current balance. In case the charity has more ether than the donor, the `revert` in line 14 makes sure that no money is transferred and the function is reverted. In line 17 the donation is sent to the charity. The final `assert` statement in line 18 assures that the current balance after the donation is equal to the balance before the donation minus the donated amount. Under regular circumstances this should always evaluate to `true`. If this assertion would not hold true the whole transaction, including the donation transfer to the charity would be reverted.
 
-## 結論
+## Consequences
 
-Guard Checkパターンを適用する際の良いことの1つは、可読性の向上です。 if/throw構成と比較して、 `require`関数の使用はエンジニアではない読者が操作の意図を理解することをより簡単にします。さらに、この新しい表現は一般的にきれいです。いくつかの選択肢があることの別の利点は、個々の方法が将来の機能を実装する際、それらの目的に合わせることが可能になることです。前述のように、 `revert（）`と `require（）`メソッドはエラーメッセージを備えていましたが、 `assert（）`は静的解析や形式的検証のような手法を用いた評価を目的として使用でき、コントラクトロジックを破綻させる条件を識別できます。これら３つの異なるメソッドが使用可能であることは、様々な状況下におけるアプリケーション開発を可能にし、そのため開発者に柔軟性を提供します。
+One positive consequence of applying the Guard Check pattern is increased readability. Compared to an if/throw construct the use of a `require` function makes it easier for the reader, who might not be a software engineer, to understand the intention of the operation. Additionally the new expressions look cleaner in general. Another benefit of having several options is that the individual methods allow for future functionality to be implemented, tailored to their purpose. As mentioned, the `revert()` and `require()` methods were equipped with an error message, while `assert()` could be used for evaluation purposes with techniques like static analysis and formal verification, to identify conditions that break contract logic. The availability of three different usable functions allows for a targeted application in various situations and therefore provides flexibility to the developer. 
 
-このパターンで実装を行った経験のないユーザーにとって、これらのメソッドは混乱のもとになるなるかもしれません。
-なぜなら名前が似通っているにもかかわらず、どこが違うのかについて説明を行っていないからです。
-間違ったメソッドを使用することは望まれない振る舞いを引き起こします。ユーザーが関数の引数に入力ミスをした場合にガスをすべて失うなどといったことです。
+The wide range of possible methods can be confusing for users without any experience with this pattern, because the names suggest similar behavior but do not offer any explanation on where they differ. Using the wrong statement can lead to undesired behavior, for example users loosing all their provided gas in case they make a typo in the function arguments.
 
-Guard Checkはエラーを処理し、望ましくない動作から保護するための信頼できる方法を提供します。そのため、Access Restriction pattern](https://github.com/shunMB/solidity-patterns-ja/access_restriction.html) では重要な要素となっています。
+Overall the Guard Check provides a reliable way to handle errors and guard against undesired behavior. It is therefore an essential ingredient in the [Access Restriction pattern](https://fravoll.github.io/solidity-patterns/access_restriction.html). 
 
+## Known Uses
 
-## 既知の使われ方
+The application of this pattern can be observed in nearly every published contract. A nice example is the contract of [HODLit](https://etherscan.io/address/0x24021d38DB53A938446eCB0a31B1267764d9d63D), a token with the intention to give an incentive to hold ether, because it features all three methods. The `require` expression is used for checks at the beginning of methods and `assert` is used to make sure that arithmetic operations can not over- or underflow. The `revert` method is called in the fallback function in line 269 to avoid the possibility to send ether to the contract without calling one of the functions specified for that purpose.
 
-このパターンは公開されているほぼすべてのコントラクトに適用されています。イーサリアムを保持するインセンティブを与えることを目的としたトークンである、[HODLit](https://etherscan.io/address/0x24021d38DB53A938446eCB0a31B1267764d9d63D)は良い例です。
-なぜなら3つすべてのメソッドを実装しているからです。`require` はメソッドの先頭のチェックに使われ、`assert`は演算過程でオーバーフロー/アンダーフローを起こさないように使われます。そして`revert`は269行目のfallback関数内でコールされ、故意に特定の関数をコールすることなくイーサリアムをコントラクトに送金することを防ぎます。
+A negative example can be observed in this simple [casino contract](https://github.com/merlox/casino-ethereum/blob/master/contracts/Casino.sol). The developer used `assert` for every check in the whole contract. This would lead to the loss of all provided gas if one of the checks fails. In case a user wants to make sure his transaction does not run out of gas and therefore provides a very high gas limit, this could result in the loss of a significant amount of money.
 
-悪い例はこの[カジノコントラクト](https://github.com/merlox/casino-ethereum/blob/master/contracts/Casino.sol)で見ることができます。この開発者は`assert`をコントラクト内のすべてのチェックに使用しています。これでは1つでもチェックが失敗したときにすべてのガスを失うことになりかねません。ユーザーが自分の取引がガス不足にならないようにして非常に高いガスリミットを設定した場合、これはかなりの金額の損失をもたらす可能性があります。
-
-[**< 戻る**](https://github.com/shunMB/solidity-patterns-ja/)
+[**< Back**](https://fravoll.github.io/solidity-patterns/)
